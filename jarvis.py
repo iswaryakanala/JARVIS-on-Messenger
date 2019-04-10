@@ -6,6 +6,7 @@ from flask import Flask, request
 
 import config
 import modules
+import speech_recognition as sr
 
 ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN', config.ACCESS_TOKEN)
 VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN', config.VERIFY_TOKEN)
@@ -27,6 +28,18 @@ def process():
 def search():
     return json.dumps(modules.search(request.args.get('q')))
 
+r = sr.Recognizer()
+with sr.Microphone() as source:
+	audio=r.listen(source)
+	try:
+		text=r.recognize_google(audio)
+		print('You said: {}',format(text))
+	except:
+		print('Sorry could not recognize your voice')
+
+
+
+
 
 @app.route('/webhook/', methods=['GET', 'POST'])
 def webhook():
@@ -36,12 +49,12 @@ def webhook():
         for event in messaging_events:
             sender = event['sender']['id']
             message = None
-            if 'message' in event and 'text' in event['message']:
+            if 'message' in event and ' format(text)' in event['message']:
                 if 'quick_reply' in event['message'] and 'payload' in event['message']['quick_reply']:
                     quick_reply_payload = event['message']['quick_reply']['payload']
                     message = modules.search(quick_reply_payload, sender=sender, postback=True)
                 else:
-                    text = event['message']['text']
+                    text = event['message'][' format(text)']
                     message = modules.search(text, sender=sender)
             if 'postback' in event and 'payload' in event['postback']:
                 postback_payload = event['postback']['payload']
@@ -65,3 +78,4 @@ def webhook():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+
